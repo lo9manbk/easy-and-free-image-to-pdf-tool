@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#141023" />
+  <title>محوّل الصور إلى PDF | أداة تعمل بدون إنترنت</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #100e18;
+      --panel: #191525;
+      --panel2: #221c32;
+      --line: #393047;
+      --txt: #f5f2ff;
+      --muted: #aaa4ba;
+      --accent: #ac83ff;
+      --accent2: #794ce2;
+      --danger: #ff8f9a;
+      --good: #8ee0b6
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 85% 0%, #35234b 0%, transparent 35%), radial-gradient(ellipse at 10% 100%, #281a37 0%, transparent 38%), var(--bg);
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--txt);
+      line-height: 1.6
+    }
+
+    .container {
+      max-width: 1030px;
+      margin: 0 auto;
+      padding: 36px 20px 66px
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 29px
+    }
+
+    .brand {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 62px;
+      height: 62px;
+      background: linear-gradient(145deg, #b799ff, #6740c2);
+      border-radius: 18px;
+      box-shadow: 0 12px 36px #5d36bc55
+    }
+
+    .brand svg {
+      width: 33px;
+      height: 33px;
+      stroke: white;
+      fill: none;
+      stroke-width: 1.9
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 35px);
+      letter-spacing: -.5px
+    }
+
+    .sub {
+      margin: 1px 0 0;
+      color: var(--muted);
+      font-size: 14px
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      align-items: start
+    }
+
+    .panel {
+      background: linear-gradient(160deg, #1d182b, #191622);
+      border: 1px solid var(--line);
+      border-radius: 21px;
+      padding: 22px;
+      box-shadow: 0 10px 45px #0002
+    }
+
+    .drop {
+      border: 2px dashed #7157a5;
+      border-radius: 16px;
+      text-align: center;
+      padding: 35px 15px;
+      cursor: pointer;
+      background: #241c34;
+      transition: background .2s, border-color .2s;
+      outline: none
+    }
+
+    .drop:hover,
+    .drop:focus-visible,
+    .drop.dragging {
+      background: #332546;
+      border-color: #c1a0ff
+    }
+
+    .drop svg {
+      width: 46px;
+      height: 46px;
+      stroke: #c3a7ff;
+      fill: none;
+      stroke-width: 1.6
+    }
+
+    .drop h2 {
+      font-size: 18px;
+      margin: 9px 0 4px
+    }
+
+    .drop p {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0
+    }
+
+    .add {
+      display: inline-block;
+      margin-top: 16px;
+      border: 0;
+      padding: 10px 21px;
+      border-radius: 11px;
+      color: white;
+      background: var(--accent2);
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer
+    }
+
+    .add:hover {
+      background: #9064f3
+    }
+
+    input[type=file] {
+      display: none
+    }
+
+    .area-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 23px 0 12px
+    }
+
+    .area-head h2 {
+      font-size: 17px;
+      margin: 0
+    }
+
+    .count {
+      color: #cab8ec;
+      background: #332549;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px
+    }
+
+    .items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 13px
+    }
+
+    .item {
+      min-width: 0;
+      background: var(--panel2);
+      border: 1px solid #4b3a62;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: grab
+    }
+
+    .item:active {
+      cursor: grabbing
+    }
+
+    .item.drag-over {
+      outline: 2px solid #bd92ff;
+      outline-offset: 2px
+    }
+
+    .thumb {
+      background: #100c18;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain
+    }
+
+    .item-meta {
+      padding: 10px 10px 7px
+    }
+
+    .filename {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      font-weight: 650;
+      direction: auto
+    }
+
+    .filesize {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .actions {
+      display: flex;
+      gap: 5px;
+      padding: 0 8px 9px;
+      justify-content: space-around
+    }
+
+    .small-btn {
+      border: 1px solid #4b3a62;
+      border-radius: 8px;
+      background: #312741;
+      color: #ece2fc;
+      cursor: pointer;
+      min-width: 27px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      font-size: 15px
+    }
+
+    .small-btn:hover {
+      background: #4a3368
+    }
+
+    .small-btn.delete:hover {
+      color: #ffb3ba;
+      border-color: #ad5c66
+    }
+
+    .empty {
+      border: 1px dashed #40344e;
+      border-radius: 14px;
+      text-align: center;
+      color: var(--muted);
+      padding: 23px;
+      font-size: 13px
+    }
+
+    legend,
+    .group-title {
+      font-weight: 750;
+      font-size: 15px;
+      margin-bottom: 11px
+    }
+
+    label.formlabel {
+      display: block;
+      color: #dcd3eb;
+      font-size: 13px;
+      margin: 15px 0 6px
+    }
+
+    select,
+    input[type=text] {
+      width: 100%;
+      background: #272035;
+      border: 1px solid #514363;
+      color: white;
+      border-radius: 10px;
+      padding: 10px 11px;
+      font: inherit;
+      outline: none
+    }
+
+    select:focus,
+    input[type=text]:focus {
+      border-color: #b58dff
+    }
+
+    option {
+      background: #241c32
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px
+    }
+
+    .two label {
+      min-width: 0
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 7px 0 0
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 20px 0
+    }
+
+    .primary {
+      width: 100%;
+      background: linear-gradient(100deg, #9670ef, #7950dc);
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 12px;
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 17px;
+      box-shadow: 0 8px 23px #7049d03b
+    }
+
+    .primary:hover {
+      filter: brightness(1.1)
+    }
+
+    .primary:disabled {
+      opacity: .5;
+      cursor: wait
+    }
+
+    .status {
+      margin-top: 11px;
+      color: var(--muted);
+      font-size: 12px;
+      min-height: 19px;
+      word-break: break-word
+    }
+
+    .status.success {
+      color: var(--good)
+    }
+
+    .status.error {
+      color: var(--danger)
+    }
+
+    footer {
+      text-align: center;
+      color: #9890a9;
+      font-size: 12px;
+      margin-top: 26px
+    }
+
+    .privacy {
+      color: #a9e8c9;
+      margin-top: 12px;
+      font-size: 12px
+    }
+
+    @media(max-width:750px) {
+      .layout {
+        grid-template-columns: 1fr
+      }
+
+      .container {
+        padding: 22px 13px 40px
+      }
+
+      header {
+        gap: 13px
+      }
+
+      .brand {
+        width: 52px;
+        height: 52px
+      }
+
+      .panel {
+        padding: 16px
+      }
+
+      .drop {
+        padding: 25px 10px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="brand" aria-hidden="true"><svg viewBox="0 0 24 24">
+          <path d="M6 3h8l5 5v13H6z" />
+          <path d="M14 3v6h5M9 15l2 2 4-5" />
+        </svg></div>
+      <div>
+        <h1>محوّل الصور إلى PDF</h1>
+        <p class="sub">اجمع صورك في ملف PDF واحد، بكل سهولة وبدون إنترنت</p>
+      </div>
+    </header>
+    <div class="layout">
+      <main class="panel">
+        <div id="dropzone" class="drop" role="button" tabindex="0" aria-label="اختر الصور أو اسحبها هنا">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V3m0 0L7 8m5-5 5 5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" />
+          </svg>
+          <h2>اسحب الصور وأفلتها هنا</h2>
+          <p>JPG • PNG • WEBP • BMP وصيغ الصور التي يدعمها المتصفح</p><button class="add" id="choose"
+            type="button">اختيار الصور</button>
+          <input id="fileInput" type="file" accept="image/*" multiple />
+        </div>
+        <div class="area-head">
+          <h2>الصور المختارة <span id="counter" class="count">0</span></h2><button type="button" class="small-btn"
+            id="clear" title="حذف جميع الصور" style="width:auto;padding:0 9px;font-size:12px">مسح الكل</button>
+        </div>
+        <div id="items" class="items" aria-label="قائمة الصور"></div>
+        <div id="empty" class="empty">لا توجد صور بعد. أضف الصور لبدء إنشاء ملف PDF.</div>
+        <p class="hint">اسحب الصور لتغيير ترتيبها، أو استخدم الأسهم أسفل كل صورة. يمكنك أيضًا تدويرها.</p>
+      </main>
+      <aside class="panel">
+        <div class="group-title">إعدادات ملف PDF</div>
+        <label class="formlabel" for="pagesize">حجم الورقة</label><select id="pagesize">
+          <option value="A4">A4 (القياسي)</option>
+          <option value="A5">A5</option>
+          <option value="Letter">Letter</option>
+          <option value="original">حسب أبعاد الصورة</option>
+        </select>
+        <label class="formlabel" for="orientation">اتجاه الورقة</label><select id="orientation">
+          <option value="auto">تلقائي حسب الصورة</option>
+          <option value="portrait">عمودي</option>
+          <option value="landscape">أفقي</option>
+        </select>
+        <div class="two">
+          <div><label class="formlabel" for="margins">هوامش الصفحات</label><select id="margins">
+              <option value="0">بدون</option>
+              <option value="12">صغيرة</option>
+              <option value="24" selected>متوسطة</option>
+              <option value="40">كبيرة</option>
+            </select></div>
+          <div><label class="formlabel" for="fitmode">حجم الصورة</label><select id="fitmode">
+              <option value="contain">احتواء كامل</option>
+              <option value="cover">ملء (اقتصاص)</option>
+            </select></div>
+        </div>
+        <label class="formlabel" for="quality">جودة الصور</label><select id="quality">
+          <option value="small">مضغوطة - ملف أصغر</option>
+          <option value="medium" selected>عالية - متوازنة</option>
+          <option value="high">ممتازة - حجم أكبر</option>
+        </select>
+        <div class="divider"></div>
+        <label class="formlabel" for="filename">اسم ملف PDF</label><input id="filename" type="text" value="صوري"
+          maxlength="100" placeholder="اسم الملف" />
+        <p class="privacy">✓ تتم معالجة الصور على جهازك ولا تُرفع إلى أي خادم.</p>
+        <button id="convert" type="button" class="primary">إنشاء وتحميل PDF</button>
+        <div id="status" class="status" role="status" aria-live="polite"></div>
+      </aside>
+    </div>
+    <footer>أداة مجانية تعمل مباشرة على متصفحات الكمبيوتر والهاتف • بدون تسجيل أو اشتراك</footer>
+  </div>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const images = [];
+    let nextId = 1;
+    let busy = false;
+    const fmt = n => n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+    function message(text, kind = '') {$('status').textContent = text; $('status').className = 'status ' + kind;}
+    function chooseFiles() {if (!busy) $('fileInput').click();}
+    $('choose').addEventListener('click', e => {e.stopPropagation(); chooseFiles();});
+    $('dropzone').addEventListener('click', chooseFiles);
+    $('dropzone').addEventListener('keydown', e => {if (e.key === 'Enter' || e.key === ' ') {e.preventDefault(); chooseFiles();} });
+    $('fileInput').addEventListener('change', e => {addFiles(e.target.files); e.target.value = '';});
+    for (const ev of ['dragenter', 'dragover']) $('dropzone').addEventListener(ev, e => {e.preventDefault(); $('dropzone').classList.add('dragging');});
+    for (const ev of ['dragleave', 'drop']) $('dropzone').addEventListener(ev, e => {e.preventDefault(); $('dropzone').classList.remove('dragging');});
+    $('dropzone').addEventListener('drop', e => {if (e.dataTransfer?.files) addFiles(e.dataTransfer.files);});
+    function addFiles(list) {
+      if (busy) return;
+      let count = 0;
+      for (const file of Array.from(list)) {
+        if (!file.type.startsWith('image/')) continue;
+        images.push({id: nextId++, file, url: URL.createObjectURL(file), rotation: 0}); count++;
+      }
+      if (!count) message('لم أجد صورًا مدعومة. اختر صورًا مثل JPG أو PNG أو WEBP.', 'error');
+      else message(`تمت إضافة ${count} صورة.`);
+      render();
+    }
+    function swapById(id, offset) {
+      const i = images.findIndex(x => x.id === id), j = i + offset;
+      if (i < 0 || j < 0 || j >= images.length || busy) return;
+      [images[i], images[j]] = [images[j], images[i]]; render();
+    }
+    function removeById(id) {
+      if (busy) return;
+      const i = images.findIndex(x => x.id === id); if (i < 0) return;
+      URL.revokeObjectURL(images[i].url); images.splice(i, 1); render();
+    }
+    function rotateById(id) {const a = images.find(x => x.id === id); if (!a || busy) return; a.rotation = (a.rotation + 90) % 360; render();}
+    let draggingId = null;
+    function render() {
+      const root = $('items'); root.replaceChildren(); $('counter').textContent = images.length;
+      $('empty').hidden = images.length > 0;
+      images.forEach((it, index) => {
+        const card = document.createElement('div'); card.className = 'item'; card.draggable = !busy;
+        const thumb = document.createElement('div'); thumb.className = 'thumb';
+        const im = document.createElement('img'); im.src = it.url; im.alt = it.file.name; im.loading = 'lazy'; im.style.transform = `rotate(${it.rotation}deg)`; thumb.append(im);
+        const meta = document.createElement('div'); meta.className = 'item-meta';
+        const name = document.createElement('div'); name.className = 'filename'; name.textContent = `${index + 1}. ${it.file.name}`; name.title = it.file.name;
+        const size = document.createElement('div'); size.className = 'filesize'; size.textContent = fmt(it.file.size) + (it.rotation ? ` • تدوير ${it.rotation}°` : ''); meta.append(name, size);
+        const actions = document.createElement('div'); actions.className = 'actions';
+        const buttons = [['↑', 'تحريك للأعلى', () => swapById(it.id, -1)], ['↓', 'تحريك للأسفل', () => swapById(it.id, 1)], ['↻', 'تدوير 90 درجة', () => rotateById(it.id)], ['×', 'حذف الصورة', () => removeById(it.id)]];
+        for (const [symbol, title, callback] of buttons) {const b = document.createElement('button'); b.type = 'button'; b.className = 'small-btn' + (symbol === '×' ? ' delete' : ''); b.textContent = symbol; b.title = title; b.setAttribute('aria-label', title); b.addEventListener('click', callback); actions.append(b);}
+        card.append(thumb, meta, actions); root.append(card);
+        card.addEventListener('dragstart', e => {if (busy) {e.preventDefault(); return;} draggingId = it.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(it.id));});
+        card.addEventListener('dragover', e => {e.preventDefault(); card.classList.add('drag-over');});
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', e => {e.preventDefault(); card.classList.remove('drag-over'); const from = images.findIndex(x => x.id === draggingId), to = images.findIndex(x => x.id === it.id); if (from < 0 || to < 0 || from === to || busy) return; const [moved] = images.splice(from, 1); images.splice(to, 0, moved); draggingId = null; render();});
+        card.addEventListener('dragend', () => {draggingId = null; card.classList.remove('drag-over');});
+      });
+    }
+    $('clear').addEventListener('click', () => {if (busy) return; for (const x of images) URL.revokeObjectURL(x.url); images.length = 0; render(); message('تم حذف جميع الصور.');});
+    function loadImage(url) {return new Promise((resolve, reject) => {const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error('تعذر قراءة الصورة. قد لا يدعم المتصفح هذه الصيغة.')); img.src = url;});}
+    function canvasJpeg(canvas, quality) {return new Promise((resolve, reject) => {canvas.toBlob(async blob => {if (!blob) {reject(new Error('فشل ترميز الصورة.')); return;} try {resolve(new Uint8Array(await blob.arrayBuffer()));} catch (e) {reject(e);} }, 'image/jpeg', quality);});}
+    async function prepImage(it, setting) {
+      const img = await loadImage(it.url);
+      const sw = img.naturalWidth, sh = img.naturalHeight;
+      if (!sw || !sh) throw new Error('الصورة لا تحتوي على أبعاد صالحة.');
+      const scale = Math.min(1, setting.maxDim / Math.max(sw, sh));
+      const w = Math.max(1, Math.round(sw * scale)), h = Math.max(1, Math.round(sh * scale));
+      const rotated = it.rotation % 180 !== 0;
+      const canvas = document.createElement('canvas'); canvas.width = rotated ? h : w; canvas.height = rotated ? w : h;
+      const ctx = canvas.getContext('2d', {alpha: false});
+      if (!ctx) throw new Error('تعذر استخدام Canvas على هذا الجهاز.');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(it.rotation * Math.PI / 180);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      const jpeg = await canvasJpeg(canvas, setting.jpegQuality);
+      const output = {jpeg, w: canvas.width, h: canvas.height}; canvas.width = 0; canvas.height = 0; return output;
+    }
+    function pageDims(im, kind, orientation) {
+      if (kind === 'original') {
+        const scale = Math.min(1, 1800 / Math.max(im.w * .48, im.h * .48));
+        return [Math.max(24, im.w * .48 * scale), Math.max(24, im.h * .48 * scale)];
+      }
+      const sizes = {A4: [595.28, 841.89], A5: [419.53, 595.28], Letter: [612, 792]};
+      let [w, h] = sizes[kind] || sizes.A4;
+      const land = orientation === 'landscape' || (orientation === 'auto' && im.w > im.h);
+      if (land) [w, h] = [h, w]; return [w, h];
+    }
+    function buildPdf(pictures, config) {
+      const encoder = new TextEncoder(), parts = []; let position = 0;
+      function append(val) {const data = typeof val === 'string' ? encoder.encode(val) : val; parts.push(data); position += data.byteLength;}
+      const total = 2 + pictures.length * 3, offsets = new Array(total + 1).fill(0);
+      function startObj(id) {offsets[id] = position; append(`${id} 0 obj\n`);}
+      function endObj() {append('endobj\n');}
+      append('%PDF-1.4\n'); append(new Uint8Array([37, 226, 227, 207, 211, 10]));
+      startObj(1); append('<< /Type /Catalog /Pages 2 0 R >>\n'); endObj();
+      startObj(2); append(`<< /Type /Pages /Kids [${pictures.map((_, i) => `${3 + i * 3} 0 R`).join(' ')}] /Count ${pictures.length} >>\n`); endObj();
+      for (let i = 0; i < pictures.length; i++) {
+        const im = pictures[i], pageId = 3 + i * 3, contentId = pageId + 1, imageId = pageId + 2;
+        const [pw, ph] = pageDims(im, config.pageSize, config.orientation);
+        const margin = Math.min(config.margin, pw * .25, ph * .25);
+        const aw = pw - 2 * margin, ah = ph - 2 * margin;
+        const s = (config.mode === 'cover' ? Math.max : Math.min)(aw / im.w, ah / im.h);
+        const dw = im.w * s, dh = im.h * s, x = (pw - dw) / 2, y = (ph - dh) / 2;
+        const clean = n => Number(n.toFixed(4));
+        const drawing = config.mode === 'cover'
+          ? `q\n${clean(margin)} ${clean(margin)} ${clean(aw)} ${clean(ah)} re W n\n${clean(dw)} 0 0 ${clean(dh)} ${clean(x)} ${clean(y)} cm\n/Im0 Do\nQ\n`
+          : `q\n${clean(dw)} 0 0 ${clean(dh)} ${clean(x)} ${clean(y)} cm\n/Im0 Do\nQ\n`;
+        const stream = encoder.encode(drawing);
+        startObj(pageId); append(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${clean(pw)} ${clean(ph)}] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>\n`); endObj();
+        startObj(contentId); append(`<< /Length ${stream.length} >>\nstream\n`); append(stream); append('endstream\n'); endObj();
+        startObj(imageId); append(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.jpeg.byteLength} >>\nstream\n`);
+        append(im.jpeg); append('\nendstream\n'); endObj();
+      }
+      const xrefPos = position;
+      append(`xref\n0 ${total + 1}\n0000000000 65535 f \n`);
+      for (let id = 1; id <= total; id++)append(`${String(offsets[id]).padStart(10, '0')} 00000 n \n`);
+      append(`trailer\n<< /Size ${total + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`);
+      return new Blob(parts, {type: 'application/pdf'});
+    }
+    $('convert').addEventListener('click', async () => {
+      if (busy) return;
+      if (images.length === 0) {message('أضف صورة واحدة على الأقل أولًا.', 'error'); return;}
+      busy = true; $('convert').disabled = true; $('convert').textContent = 'جارٍ إنشاء PDF...';
+      try {
+        const preset = {small: {maxDim: 1600, jpegQuality: .72}, medium: {maxDim: 2600, jpegQuality: .87}, high: {maxDim: 3600, jpegQuality: .94}}[$('quality').value];
+        const setting = {...preset}; const pictures = [];
+        for (let i = 0; i < images.length; i++) {
+          message(`معالجة الصورة ${i + 1} من ${images.length}...`);
+          await new Promise(r => setTimeout(r, 0));
+          try {pictures.push(await prepImage(images[i], setting));}
+          catch (e) {throw new Error(`الصورة ${i + 1} (${images[i].file.name}): ${e.message}`);}
+        }
+        const pdf = buildPdf(pictures, {pageSize: $('pagesize').value, orientation: $('orientation').value, margin: Number($('margins').value), mode: $('fitmode').value});
+        const raw = $('filename').value.trim().replace(/[\\/:*?"<>|\x00-\x1F]/g, '_').replace(/\.pdf$/i, '') || 'الصور';
+        const url = URL.createObjectURL(pdf), a = document.createElement('a'); a.href = url; a.download = raw + '.pdf'; document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        message(`تم إنشاء وتحميل ${raw}.pdf (${fmt(pdf.size)}) ويحتوي على ${pictures.length} صفحة.`, 'success');
+      } catch (e) {console.error(e); message('تعذر إنشاء PDF: ' + e.message, 'error');}
+      finally {busy = false; $('convert').disabled = false; $('convert').textContent = 'إنشاء وتحميل PDF';}
+    });
+    render();
+  </script>
+</body>
+
+</html>
